@@ -1,26 +1,41 @@
-import { Controller, Get, Param, Post, Body, NotFoundException } from "@nestjs/common";
+import {Controller, Get, Param, Post, Body, Put, ValidationPipe, UsePipes} from "@nestjs/common";
 import { UserService } from '../service/user.service';
-import { CreateUserDto } from "../dto/user/create-user.dto";
-import { UserEntity } from "../entity/user.entity";
+import { UserEntity } from "../../db/entity/user.entity";
+import {LoginUserDto} from "../dto/user/loginUser.dto";
+import {CreateUserDto} from "../dto/user/createUser.dto";
+import {ChangeUserDto} from "../dto/user/changeUser.dto";
+import {GetUserInterface} from "../types/getUser.interface";
+import {ApiTags} from "@nestjs/swagger";
 
 @Controller("api/users")
+@ApiTags("User controller")
 export class UserController {
   constructor(private readonly UserService: UserService) {}
 
   @Get()
-  async getAll(): Promise<UserEntity[]> {
+  getAll(): Promise<UserEntity[]> {
     return this.UserService.getAll();
   }
 
   @Get(":id")
-  async getOne(@Param("id") id: number): Promise<UserEntity> {
-    const result = await this.UserService.getOne(id);
-    if(!result) throw new NotFoundException("Not Found",{description: Error().stack});
-    return result;
+  getOne(@Param("id") id: number): Promise<UserEntity> {
+    return this.UserService.getOne(id);
   }
 
-  @Post("/create")
-  async create(@Body() createUserDto: CreateUserDto) {
+  @Post("/register")
+  @UsePipes(new ValidationPipe())
+  create(@Body() createUserDto: CreateUserDto): Promise<GetUserInterface> {
+    return this.UserService.register(createUserDto)
+  }
 
+  @Post("/login")
+  @UsePipes(new ValidationPipe())
+  login(@Body() loginUserDto: LoginUserDto): Promise<GetUserInterface> {
+    return this.UserService.login(loginUserDto);
+  }
+
+  @Put(":id/change")
+  change(@Body() changeUserDto: ChangeUserDto, @Param("id") id: number): Promise<UserEntity> {
+    return this.UserService.change(changeUserDto,id);
   }
 }

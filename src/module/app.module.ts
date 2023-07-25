@@ -3,10 +3,19 @@ import { AppController } from '../controller/app.controller';
 import { AppService } from '../service/app.service';
 import { UserModule } from "./user.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import config from "../../ormconfig";
+import config from "../../db/ormconfig";
+import {CoinModule} from "./coin.module";
+import {ScheduleModule} from "@nestjs/schedule";
+import {TasksModule} from "./tasks.module";
 
 @Module({
-  imports: [TypeOrmModule.forRoot(config),UserModule],
+  imports: [
+      TypeOrmModule.forRoot(config),
+      ScheduleModule.forRoot(),
+      TasksModule,
+      UserModule,
+      CoinModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
