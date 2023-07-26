@@ -7,93 +7,66 @@ import {CreateUserDto} from "../dto/user/createUser.dto";
 import {ChangeUserDto} from "../dto/user/changeUser.dto";
 import {ErrorMessage} from "../utils/error-message";
 import * as bcrypt from 'bcrypt'
-import {sign} from "jsonwebtoken";
-import {GetUserInterface} from "../types/getUser.interface";
-import {privateKey} from "../utils/private.key";
+import {LoginUserInterface} from "../types/loginUser.interface";
+import {UserInterface} from "../types/user.interface";
+import {JwtService} from "@nestjs/jwt";
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>) {
-  }
+  constructor(
+      @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
+      private readonly jwtService: JwtService
+  ) {}
 
-  public async getAll(): Promise<UserEntity[]> {
-    return this.userRepository.find({
-      select: {
-        id: true,
-        login: true,
-        email: true,
-        createDate: true
-      },
-      order: {id: "ASC"}
-    })
-  }
-
-  public async getOne(userId: number): Promise<UserEntity> {
-    const user = await this.userRepository.findOne({
-      select: {
-        id: true,
-        login: true,
-        email: true,
-        createDate: true
-      }, where: {
-        id: userId
-      }
-    });
+  public async getOne(userId: number): Promise<UserInterface> {
+    const user = await this.userRepository.findOne({where: {id: userId}});
     if(!user) throw new NotFoundException("Not Found", {description: Error().stack});
-    return user;
+    return {user: user};
   }
 
-  public async register(createUserDto: CreateUserDto): Promise<GetUserInterface> {
+  public async register(createUserDto: CreateUserDto): Promise<LoginUserInterface> {
     const userEntity = new UserEntity();
     Object.assign(userEntity, createUserDto);
-    if (await this.userRepository.exist({
+    if(await this.userRepository.exist({
       where: [
         {login: userEntity.login},
         {email: userEntity.email}
       ]
     })) throw new HttpException(ErrorMessage.userExists, HttpStatus.UNPROCESSABLE_ENTITY);
     const user = await this.userRepository.save(userEntity);
+    const payload = {sub: user.id, username: user.login};
     return {
       user: {
         id: user.id,
         login: user.login,
         email: user.email,
         createDate: user.createDate,
-        token: this.generateJwtToken(user)
+        token: await this.jwtService.signAsync(payload)
       }
     }
   }
 
-  private generateJwtToken(user: UserEntity): string {
-    const timeToExpire: string = "1d";
-    return sign({
-      id: user.id,
-      login: user.login,
-      email: user.email
-    },privateKey,{expiresIn: timeToExpire});
-  }
-
-  public async login(loginUserDto: LoginUserDto): Promise<GetUserInterface> {
+  public async login(loginUserDto: LoginUserDto): Promise<LoginUserInterface> {
     const user = await this.userRepository.findOne({
-      where: {
-        login: loginUserDto.login
-      }
+      select: ["id","login","email","createDate","password"],
+      where: {login: loginUserDto.login}
     });
     if(!user || !await bcrypt.compare(loginUserDto.password,user.password)){
       throw new BadRequestException(ErrorMessage.userNotFound, {description: Error().stack});
     }
+    const payload = {sub: user.id, username: user.login};
     return {
       user: {
         id: user.id,
         login: user.login,
         email: user.email,
         createDate: user.createDate,
-        token: this.generateJwtToken(user)
+        token: await this.jwtService.signAsync(payload)
       }
     }
   }
 
-  public async change(changeUserDto: ChangeUserDto, userId: number): Promise<UserEntity> {
+  public async change(changeUserDto: ChangeUserDto, userId: number): Promise<UserInterface> {
     if(!await this.userRepository.exist({
       where: {id: userId}
     })) throw new BadRequestException(ErrorMessage.userNotFound, {description: Error().stack});
@@ -103,15 +76,7 @@ export class UserService {
     (changeUserDto.password) ?
         await this.userRepository.update(userId, {login: changeUserDto.login, password: changeUserDto.password}) :
         await this.userRepository.update(userId, {login: changeUserDto.login});
-    return this.userRepository.findOne({
-      select: {
-        id: true,
-        login: true,
-        email: true,
-        createDate: true
-      }, where: {
-        id: userId
-      }
-    });
+    const user = await this.userRepository.findOne({where: {id: userId}});
+    return {user: user};
   }
 }

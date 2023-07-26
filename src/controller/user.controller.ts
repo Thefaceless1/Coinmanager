@@ -1,41 +1,40 @@
-import {Controller, Get, Param, Post, Body, Put, ValidationPipe, UsePipes} from "@nestjs/common";
+import {Controller, Get, Param, Post, Body, Put, ValidationPipe, UsePipes, UseGuards, Request} from "@nestjs/common";
 import { UserService } from '../service/user.service';
-import { UserEntity } from "../../db/entity/user.entity";
 import {LoginUserDto} from "../dto/user/loginUser.dto";
 import {CreateUserDto} from "../dto/user/createUser.dto";
 import {ChangeUserDto} from "../dto/user/changeUser.dto";
-import {GetUserInterface} from "../types/getUser.interface";
-import {ApiTags} from "@nestjs/swagger";
+import {LoginUserInterface} from "../types/loginUser.interface";
+import {ApiBearerAuth, ApiTags} from "@nestjs/swagger";
+import {UserInterface} from "../types/user.interface";
+import {AuthGuard} from "../guards/auth.guard";
 
-@Controller("api/users")
+@Controller("api/user")
 @ApiTags("User controller")
+@ApiBearerAuth()
 export class UserController {
   constructor(private readonly UserService: UserService) {}
 
+  @UseGuards(AuthGuard)
   @Get()
-  getAll(): Promise<UserEntity[]> {
-    return this.UserService.getAll();
-  }
-
-  @Get(":id")
-  getOne(@Param("id") id: number): Promise<UserEntity> {
-    return this.UserService.getOne(id);
+  getOne(@Request() req: Request): Promise<UserInterface> {
+    return this.UserService.getOne(req["user"].sub);
   }
 
   @Post("/register")
   @UsePipes(new ValidationPipe())
-  create(@Body() createUserDto: CreateUserDto): Promise<GetUserInterface> {
+  create(@Body() createUserDto: CreateUserDto): Promise<LoginUserInterface> {
     return this.UserService.register(createUserDto)
   }
 
   @Post("/login")
   @UsePipes(new ValidationPipe())
-  login(@Body() loginUserDto: LoginUserDto): Promise<GetUserInterface> {
+  login(@Body() loginUserDto: LoginUserDto): Promise<LoginUserInterface> {
     return this.UserService.login(loginUserDto);
   }
 
+  @UseGuards(AuthGuard)
   @Put(":id/change")
-  change(@Body() changeUserDto: ChangeUserDto, @Param("id") id: number): Promise<UserEntity> {
+  change(@Body() changeUserDto: ChangeUserDto, @Param("id") id: number): Promise<UserInterface> {
     return this.UserService.change(changeUserDto,id);
   }
 }

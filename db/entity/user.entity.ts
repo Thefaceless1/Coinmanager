@@ -1,21 +1,21 @@
-import {BeforeInsert, Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn} from "typeorm";
 import * as bcrypt from 'bcrypt'
 
-@Entity({name: "users"})
+@Entity({name: "users",orderBy: {id: "ASC"}})
 export class UserEntity {
-  @PrimaryGeneratedColumn({comment: "User id"})
+  @PrimaryGeneratedColumn()
   id: number
 
-  @Column({comment: "User login"})
+  @Column()
   login: string
 
-  @Column({comment: "User email"})
+  @Column()
   email: string
 
-  @Column({ comment: "User password"})
+  @Column({select: false})
   password: string
 
-  @Column("timestamptz",{name: "create_date",default: new Date(),comment: "User creation date"})
+  @CreateDateColumn({name: "create_date",type: "timestamptz"})
   createDate: Date
 
   @BeforeInsert()

@@ -1,6 +1,6 @@
 import {Column, Entity, PrimaryColumn} from "typeorm";
 
-@Entity({name: "coins"})
+@Entity({name: "coins", orderBy: {rank: "ASC"}})
 export class CoinEntity {
 
     @PrimaryColumn()
