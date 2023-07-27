@@ -11,16 +11,14 @@ export class CoinService {
     public async coins(pageNum: number, pageSize: number, symbol?: string): Promise<GetCoinsInterface> {
         const from: number = pageNum * pageSize;
         const to: number = from + pageSize;
-        const coinsWithFilter = (await this.coinRepository.find()).filter(coin => coin.symbol.toLowerCase().includes(symbol.toLowerCase()));
-        const foundedCoins = (symbol) ?
-            coinsWithFilter.filter((coin,index) => {
-                return index >= from && index < to
-            }) :
-            (await this.coinRepository.find()).filter((coin,index) => {
-                return index >= from && index < to
-            });
-        const totalCount = (symbol) ? coinsWithFilter.length : await this.coinRepository.count();
-        const totalPages = Math.floor(totalCount/pageSize) + 1;
+        const coins: CoinEntity[] = (symbol) ?
+            (await this.coinRepository.find()).filter(coin => coin.symbol.toLowerCase().includes(symbol.toLowerCase())) :
+            await this.coinRepository.find();
+        const foundedCoins: CoinEntity[] = coins.filter((coin,index) => {
+            return index >= from && index < to
+        });
+        const totalCount: number = coins.length;
+        const totalPages: number = Math.floor(totalCount/pageSize) + 1;
         return {
             coins: foundedCoins,
             pageData: {
