@@ -4,7 +4,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {CoinEntity} from "../../db/entity/coin.entity";
 import {Cron, CronExpression} from "@nestjs/schedule";
 import axios, {AxiosResponse} from "axios";
-import {ApiKeys} from "../utils/api.keys";
+import {ApiKeys} from "../constants/api.keys";
 import {CmpCoinsInterface} from "../types/cmpCoins.interface";
 
 @Injectable()
@@ -18,7 +18,10 @@ export class TasksService {
             if(await this.coinRepository.exist({where:{id: coin.id}})) {
                 await this.coinRepository.update(
                     {id: coin.id},
-                    {price: coin.quote.USD.price});
+                    {
+                        price: coin.quote.USD.price,
+                        rank: coin.cmc_rank
+                    });
             }
             else await this.coinRepository.insert({
                 id: coin.id,

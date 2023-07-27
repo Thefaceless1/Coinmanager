@@ -8,17 +8,21 @@ import {GetCoinsInterface} from "../types/getCoins.interface";
 export class CoinService {
     constructor(@InjectRepository(CoinEntity) private readonly coinRepository: Repository<CoinEntity>) {}
 
-    public async coins(pageNum: number, pageSize: number): Promise<GetCoinsInterface> {
-        const totalCount = await this.coinRepository.count();
-        const totalPages = Math.floor(totalCount/pageSize);
-        const from: number = pageNum * pageSize + 1;
-        const to: number = from + pageSize - 1;
-        const coins = await this.coinRepository
-            .createQueryBuilder()
-            .where(`rank BETWEEN ${from} and ${to}`)
-            .execute();
+    public async coins(pageNum: number, pageSize: number, symbol?: string): Promise<GetCoinsInterface> {
+        const from: number = pageNum * pageSize;
+        const to: number = from + pageSize;
+        const coinsWithFilter = (await this.coinRepository.find()).filter(coin => coin.symbol.toLowerCase().includes(symbol.toLowerCase()));
+        const foundedCoins = (symbol) ?
+            coinsWithFilter.filter((coin,index) => {
+                return index >= from && index < to
+            }) :
+            (await this.coinRepository.find()).filter((coin,index) => {
+                return index >= from && index < to
+            });
+        const totalCount = (symbol) ? coinsWithFilter.length : await this.coinRepository.count();
+        const totalPages = Math.floor(totalCount/pageSize) + 1;
         return {
-            coins: coins,
+            coins: foundedCoins,
             pageData: {
                 pageNum: pageNum,
                 pageSize: pageSize,

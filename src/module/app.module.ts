@@ -7,6 +7,7 @@ import config from "../../db/ormconfig";
 import {CoinModule} from "./coin.module";
 import {ScheduleModule} from "@nestjs/schedule";
 import {TasksModule} from "./tasks.module";
+import {AuthModule} from "./auth.module";
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import {TasksModule} from "./tasks.module";
       ScheduleModule.forRoot(),
       TasksModule,
       UserModule,
-      CoinModule
+      CoinModule,
+      AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

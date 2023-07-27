@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt'
 
 @Entity({name: "users",orderBy: {id: "ASC"}})
 export class UserEntity {
+
   @PrimaryGeneratedColumn()
   id: number
 
