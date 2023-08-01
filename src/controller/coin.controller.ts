@@ -17,6 +17,14 @@ export class CoinController {
         required: false,
         description: "Filter by symbol column"
     })
+    @ApiQuery({
+        name: "pageSize",
+        example: 20,
+    })
+    @ApiQuery({
+        name: "pageNum",
+        example: 0,
+    })
     async coins(
         @Query("pageNum") pageNum: number,
         @Query("pageSize") pageSize: number,

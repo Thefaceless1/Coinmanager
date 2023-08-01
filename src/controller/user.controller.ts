@@ -6,6 +6,7 @@ import {UserInterface} from "../types/user.interface";
 import {AuthGuard} from "../guards/auth.guard";
 import {ResponseStatusInterface} from "../types/responseStatus.interface";
 import {AddCoinsDto} from "../dto/user/addCoins.dto";
+import {UserCoinsInterface} from "../types/userCoins.interface";
 
 @Controller("api/user")
 @ApiTags("User controller")
@@ -30,9 +31,14 @@ export class UserController {
     return this.UserService.delete(req["user"].sub);
   }
 
-  @Post("/addCoins")
+  @Post("/coins/add")
   @UsePipes(new ValidationPipe())
-  async addCoins(@Body() addCoinsDto: AddCoinsDto,@Request() req: Request) {
+  async addCoins(@Body() addCoinsDto: AddCoinsDto,@Request() req: Request): Promise<ResponseStatusInterface> {
     return this.UserService.addCoins(req["user"].sub, addCoinsDto);
+  }
+
+  @Get("/coins")
+  async userCoins(@Request() req: Request): Promise<UserCoinsInterface> {
+    return this.UserService.userCoins(req["user"].sub);
   }
 }

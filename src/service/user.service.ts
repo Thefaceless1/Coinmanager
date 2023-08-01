@@ -9,6 +9,7 @@ import {ResponseStatusInterface} from "../types/responseStatus.interface";
 import * as bcrypt from 'bcrypt'
 import {AddCoinsDto} from "../dto/user/addCoins.dto";
 import {CoinEntity} from "../../db/entity/coin.entity";
+import {UserCoinsInterface} from "../types/userCoins.interface";
 
 @Injectable()
 export class UserService {
@@ -70,5 +71,18 @@ export class UserService {
     user.coins = coinArray
     await this.userRepository.save(user);
     return {status: "SUCCESS"};
+  }
+
+  public async userCoins(userId: number): Promise<UserCoinsInterface> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId
+      },
+      relations: {
+        coins: true
+      }});
+    return {
+      user: user
+    }
   }
 }
