@@ -4,7 +4,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {CoinEntity} from "../../db/entity/coin.entity";
 import {Cron, CronExpression} from "@nestjs/schedule";
 import axios, {AxiosResponse} from "axios";
-import {ApiKeys} from "../constants/api.keys";
+import {apiKeysConfig} from "../configs/api.keys.config";
 import {CmpCoinsInterface} from "../types/cmpCoins.interface";
 
 @Injectable()
@@ -37,7 +37,7 @@ export class TasksService {
         const url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest";
         const config = {
             headers: {
-                "X-CMC_PRO_API_KEY": ApiKeys.coinMarketCapApiKey
+                "X-CMC_PRO_API_KEY": apiKeysConfig.coinMarketCapApiKey
             },
             params: {
                 limit: 200

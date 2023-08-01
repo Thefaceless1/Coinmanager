@@ -17,7 +17,7 @@ export class CoinController {
         required: false,
         description: "Filter by symbol column"
     })
-    coins(
+    async coins(
         @Query("pageNum") pageNum: number,
         @Query("pageSize") pageSize: number,
         @Query("symbol") symbol?: string

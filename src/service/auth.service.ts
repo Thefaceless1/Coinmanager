@@ -5,15 +5,19 @@ import {Repository} from "typeorm";
 import {JwtService} from "@nestjs/jwt";
 import {CreateUserDto} from "../dto/user/createUser.dto";
 import {LoginUserInterface} from "../types/loginUser.interface";
-import {ErrorMessage} from "../constants/error-message";
+import {ErrorMessage} from "../configs/error-message";
 import {LoginUserDto} from "../dto/user/loginUser.dto";
 import * as bcrypt from "bcrypt";
+import {MailService} from "./mail.service";
+import {RestorePasswordDto} from "../dto/auth/restorePassword.dto";
+import {ResponseStatusInterface} from "../types/responseStatus.interface";
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        private readonly mailService: MailService
     ) {}
 
     public async register(createUserDto: CreateUserDto): Promise<LoginUserInterface> {
@@ -26,7 +30,10 @@ export class AuthService {
             ]
         })) throw new HttpException(ErrorMessage.userExists, HttpStatus.UNPROCESSABLE_ENTITY);
         const user = await this.userRepository.save(userEntity);
-        const payload = {sub: user.id, username: user.login};
+        const payload = {
+            sub: user.id,
+            username: user.login
+        };
         return {
             user: {
                 id: user.id,
@@ -41,12 +48,17 @@ export class AuthService {
     public async login(loginUserDto: LoginUserDto): Promise<LoginUserInterface> {
         const user = await this.userRepository.findOne({
             select: ["id","login","email","createDate","password"],
-            where: {login: loginUserDto.login}
+            where: {
+                login: loginUserDto.login
+            }
         });
         if(!user || !await bcrypt.compare(loginUserDto.password,user.password)){
             throw new BadRequestException(ErrorMessage.userNotFound, {description: Error().stack});
         }
-        const payload = {sub: user.id, username: user.login};
+        const payload = {
+            sub: user.id,
+            username: user.login
+        };
         return {
             user: {
                 id: user.id,
@@ -55,6 +67,20 @@ export class AuthService {
                 createDate: user.createDate,
                 token: await this.jwtService.signAsync(payload)
             }
+        }
+    }
+
+    public async restorePassword(restorePasswordDto: RestorePasswordDto): Promise<ResponseStatusInterface> {
+        const user = await this.userRepository.findOne({
+            select: ["password"],
+            where:{
+                email: restorePasswordDto.email
+            }});
+        if(!user) throw new BadRequestException(ErrorMessage.userNotFound, Error().stack);
+        await this.mailService.sendMail(restorePasswordDto.email);
+
+        return {
+            status: "SUCCESS"
         }
     }
 }

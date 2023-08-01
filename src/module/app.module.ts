@@ -8,11 +8,14 @@ import {CoinModule} from "./coin.module";
 import {ScheduleModule} from "@nestjs/schedule";
 import {TasksModule} from "./tasks.module";
 import {AuthModule} from "./auth.module";
+import {MailerModule} from "@nestjs-modules/mailer";
+import {mailerConfig} from "../configs/mailer.config";
 
 @Module({
   imports: [
       TypeOrmModule.forRoot(config),
       ScheduleModule.forRoot(),
+      MailerModule.forRoot(mailerConfig),
       TasksModule,
       UserModule,
       CoinModule,

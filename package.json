@@ -15,9 +15,11 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d db/ormdatasource.ts",
     "db:drop": "npm run typeorm schema:drop",
     "db:migration:generate": "npm run typeorm migration:generate -n",
-    "db:migration:run": "npm run typeorm migration:run"
+    "db:migration:run": "npm run typeorm migration:run",
+    "db:migration:revert": "npm run typeorm migration:revert"
   },
   "dependencies": {
+    "@nestjs-modules/mailer": "^1.9.1",
     "@nestjs/axios": "^3.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
@@ -30,6 +32,8 @@
     "bcrypt": "^5.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "dotenv": "^16.3.1",
+    "nodemailer": "^6.9.4",
     "pg": "^8.11.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
@@ -46,6 +50,7 @@
     "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.3.1",
+    "@types/nodemailer": "^6.4.9",
     "@types/pg": "^8.10.2",
     "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.11",

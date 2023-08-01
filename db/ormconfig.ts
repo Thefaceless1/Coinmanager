@@ -1,14 +1,15 @@
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import 'dotenv/config'
 
-const config: PostgresConnectionOptions = {
+const ormconfig: PostgresConnectionOptions = {
   type: "postgres",
-  host: "93.85.88.48",
-  port: 5432,
-  username: "admin",
-  password: "12345",
-  database: "coinmanager",
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   entities: [__dirname + "/entity/*.entity{.ts,.js}"],
   synchronize: false,
   migrations: [__dirname + "/migrations/*{.ts,.js}"]
 }
-export default config
+export default ormconfig
