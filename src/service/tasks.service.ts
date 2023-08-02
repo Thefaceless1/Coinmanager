@@ -4,43 +4,46 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {CoinEntity} from "../../db/entity/coin.entity";
 import {Cron, CronExpression} from "@nestjs/schedule";
 import axios, {AxiosResponse} from "axios";
-import {apiKeysConfig} from "../configs/api.keys.config";
-import {CmpCoinsInterface} from "../types/cmpCoins.interface";
+import {CoinGeckoCoinsInterface} from "../types/coinGeckoCoins.interface";
 
 @Injectable()
 export class TasksService {
     constructor(@InjectRepository(CoinEntity) private readonly coinRepository: Repository<CoinEntity>) {}
 
-    @Cron(CronExpression.EVERY_HOUR)
+    @Cron(CronExpression.EVERY_10_MINUTES)
     async updateCoins(): Promise<void> {
-        const coins: CmpCoinsInterface[] = await this.coinmarketcapCoinsData().then(result => result.data.data);
+        const coins: CoinGeckoCoinsInterface[] = await this.coinGeckoCoinsData().then(result => result.data);
         for(const coin of coins) {
-            if(await this.coinRepository.exist({where:{id: coin.id}})) {
+            if(await this.coinRepository.exist({where:{name: coin.name}})) {
                 await this.coinRepository.update(
-                    {id: coin.id},
+                    {name: coin.name},
                     {
-                        price: coin.quote.USD.price,
-                        rank: coin.cmc_rank
+                        price: coin.current_price,
+                        rank: coin.market_cap_rank,
+                        marketCap: coin.market_cap
                     });
             }
             else await this.coinRepository.insert({
-                id: coin.id,
                 name: coin.name,
-                rank: coin.cmc_rank,
+                rank: coin.market_cap_rank,
                 symbol: coin.symbol,
-                price: coin.quote.USD.price
+                price: coin.current_price,
+                marketCap: coin.market_cap,
+                image: coin.image
             })
         }
     }
 
-    private async coinmarketcapCoinsData(): Promise<AxiosResponse<any>> {
-        const url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest";
+    private async coinGeckoCoinsData(): Promise<AxiosResponse<any>> {
+        const url = "https://api.coingecko.com/api/v3/coins/markets";
         const config = {
-            headers: {
-                "X-CMC_PRO_API_KEY": apiKeysConfig.coinMarketCapApiKey
-            },
             params: {
-                limit: 200
+                vs_currency: "usd",
+                order: "market_cap_desc",
+                per_page: 200,
+                page: 1,
+                sparkline: false,
+                locale: "en"
             }
         };
         return axios.get(url,config as any).then(res => res,err => err);

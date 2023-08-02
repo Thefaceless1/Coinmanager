@@ -7,7 +7,7 @@ import {ErrorMessage} from "../configs/error-message";
 import {UserInterface} from "../types/user.interface";
 import {ResponseStatusInterface} from "../types/responseStatus.interface";
 import * as bcrypt from 'bcrypt'
-import {AddCoinsDto} from "../dto/user/addCoins.dto";
+import {UpdateCoinsDto} from "../dto/user/updateCoins.dto";
 import {CoinEntity} from "../../db/entity/coin.entity";
 import {UserCoinsInterface} from "../types/userCoins.interface";
 
@@ -24,7 +24,7 @@ export class UserService {
     return {user: user};
   }
 
-  public async update(updateUserDto: UpdateUserDto, userId: number): Promise<UserInterface> {
+  public async update(updateUserDto: UpdateUserDto, userId: number): Promise<ResponseStatusInterface> {
     if(!await this.userRepository.exist({
       where: {
         id: userId
@@ -44,11 +44,7 @@ export class UserService {
         await this.userRepository.update(userId, {
           login: updateUserDto.login
         });
-    const user = await this.userRepository.findOne({
-      where: {
-        id: userId
-      }});
-    return {user: user};
+    return {status: "SUCCESS"};
   }
 
   public async delete(userId: number): Promise<ResponseStatusInterface> {
@@ -59,10 +55,10 @@ export class UserService {
     return {status: "SUCCESS"};
   }
 
-  public async addCoins(userId: number, addCoinsDto: AddCoinsDto): Promise<ResponseStatusInterface> {
+  public async updateCoins(userId: number, updateCoinsDto: UpdateCoinsDto): Promise<ResponseStatusInterface> {
     const user = new UserEntity();
     const coinArray: CoinEntity[] = [];
-    for(const coinId of addCoinsDto.coins) {
+    for(const coinId of updateCoinsDto.coins) {
       const coin = new CoinEntity()
       coin.id = coinId;
       coinArray.push(coin);
@@ -84,5 +80,19 @@ export class UserService {
     return {
       user: user
     }
+  }
+
+  public async deleteUserCoins(coinId: number, userId: number): Promise<ResponseStatusInterface> {
+    const user = await this.userRepository.findOne({
+      relations: {
+        coins: true
+      },
+      where: {
+        id: userId
+      }
+    })
+    user.coins = user.coins.filter(coin => coin.id != coinId)
+    await this.userRepository.save(user);
+    return {status: "SUCCESS"};
   }
 }

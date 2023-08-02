@@ -1,8 +1,8 @@
 import {ApiProperty} from "@nestjs/swagger";
 import {IsNotEmpty} from "class-validator";
 
-export class AddCoinsDto {
+export class UpdateCoinsDto {
     @ApiProperty({type: [Number]})
     @IsNotEmpty()
-    coins: number[]
+    readonly coins: number[]
 }

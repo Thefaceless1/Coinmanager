@@ -1,9 +1,9 @@
-import {Column, Entity, PrimaryColumn} from "typeorm";
+import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
 
 @Entity({name: "coins", orderBy: {rank: "ASC"}})
 export class CoinEntity {
 
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id: number
 
     @Column()
@@ -17,4 +17,10 @@ export class CoinEntity {
 
     @Column({type: "float"})
     price: number
+
+    @Column({name: "market_cap",type: "int8"})
+    marketCap: number
+
+    @Column()
+    image: string
 }
