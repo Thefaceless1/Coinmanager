@@ -1,8 +1,22 @@
-import {Controller, Get, Query, UseGuards} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+     Put,
+    Query,
+    Request,
+    UseGuards,
+    UsePipes,
+    ValidationPipe
+} from "@nestjs/common";
 import {ApiBearerAuth, ApiQuery, ApiTags} from "@nestjs/swagger";
 import {CoinService} from "../service/coin.service";
 import {GetCoinsInterface} from "../types/getCoins.interface";
 import {AuthGuard} from "../guards/auth.guard";
+import {UpdateCoinsDto} from "../dto/user/updateCoins.dto";
+import {ResponseStatusInterface} from "../types/responseStatus.interface";
 
 @Controller("api/coins")
 @ApiTags("Coin controller")
@@ -31,5 +45,16 @@ export class CoinController {
         @Query("symbol") symbol?: string
     ): Promise<GetCoinsInterface> {
         return this.coinService.coins(pageNum, pageSize, symbol);
+    }
+
+    @Put("/update")
+    @UsePipes(new ValidationPipe())
+    async addCoins(@Body() updateCoinsDto: UpdateCoinsDto, @Request() req: Request): Promise<ResponseStatusInterface> {
+        return this.coinService.updateCoins(req["user"].sub, updateCoinsDto);
+    }
+
+    @Delete("/delete/:coinId")
+    async deleteCoins(@Request() req: Request, @Param("coinId") coinId: number): Promise<ResponseStatusInterface> {
+        return this.coinService.deleteCoins(coinId,req["user"].sub)
     }
 }

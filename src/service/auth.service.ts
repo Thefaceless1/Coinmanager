@@ -5,7 +5,7 @@ import {Repository} from "typeorm";
 import {JwtService} from "@nestjs/jwt";
 import {CreateUserDto} from "../dto/user/createUser.dto";
 import {LoginUserInterface} from "../types/loginUser.interface";
-import {ErrorMessage} from "../configs/error-message";
+import {ResponseMessage} from "../response.message";
 import {LoginUserDto} from "../dto/user/loginUser.dto";
 import * as bcrypt from "bcrypt";
 import {MailService} from "./mail.service";
@@ -28,7 +28,7 @@ export class AuthService {
                 {login: userEntity.login},
                 {email: userEntity.email}
             ]
-        })) throw new HttpException(ErrorMessage.userExists, HttpStatus.UNPROCESSABLE_ENTITY);
+        })) throw new HttpException(ResponseMessage.userExists, HttpStatus.UNPROCESSABLE_ENTITY);
         const user = await this.userRepository.save(userEntity);
         const payload = {
             sub: user.id,
@@ -53,7 +53,7 @@ export class AuthService {
             }
         });
         if(!user || !await bcrypt.compare(loginUserDto.password,user.password)){
-            throw new BadRequestException(ErrorMessage.userNotFound, {description: Error().stack});
+            throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
         }
         const payload = {
             sub: user.id,
@@ -76,7 +76,7 @@ export class AuthService {
             where:{
                 email: restorePasswordDto.email
             }});
-        if(!user) throw new BadRequestException(ErrorMessage.userNotFound, Error().stack);
+        if(!user) throw new BadRequestException(ResponseMessage.userNotFound, Error().stack);
         await this.mailService.sendMail(restorePasswordDto.email);
 
         return {

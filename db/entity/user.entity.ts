@@ -1,6 +1,16 @@
-import {BeforeInsert, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
+import {
+  BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn
+} from "typeorm";
 import * as bcrypt from 'bcrypt'
 import {CoinEntity} from "./coin.entity";
+import {PurchasesEntity} from "./purchases.entity";
 
 @Entity({name: "users",orderBy: {id: "ASC"}})
 export class UserEntity {
@@ -17,7 +27,10 @@ export class UserEntity {
   @Column({select: false})
   password: string
 
-  @CreateDateColumn({name: "create_date",type: "timestamptz"})
+  @CreateDateColumn({
+    name: "create_date",
+    type: "timestamptz"
+  })
   createDate: Date
 
   @ManyToMany(() => CoinEntity,{cascade: true})
@@ -30,6 +43,9 @@ export class UserEntity {
       name: "coin_id"
     }})
   coins: CoinEntity[]
+
+  @OneToMany(() => PurchasesEntity, purchase => purchase.id, {cascade: true})
+  purchases: PurchasesEntity[]
 
   @BeforeInsert()
   async hashPassword() {

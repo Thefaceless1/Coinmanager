@@ -1,26 +1,27 @@
 import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
 import {UserEntity} from "../../db/entity/user.entity";
 import {InjectRepository} from "@nestjs/typeorm";
-import {Not, Repository} from "typeorm";
+import {In, Not, Repository} from "typeorm";
 import {UpdateUserDto} from "../dto/user/updateUser.dto";
-import {ErrorMessage} from "../configs/error-message";
+import {ResponseMessage} from "../response.message";
 import {UserInterface} from "../types/user.interface";
 import {ResponseStatusInterface} from "../types/responseStatus.interface";
 import * as bcrypt from 'bcrypt'
-import {UpdateCoinsDto} from "../dto/user/updateCoins.dto";
-import {CoinEntity} from "../../db/entity/coin.entity";
 import {UserCoinsInterface} from "../types/userCoins.interface";
+import {PurchasesEntity} from "../../db/entity/purchases.entity";
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>) {}
+  constructor(
+      @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
+      @InjectRepository(PurchasesEntity) private readonly purchaseRepository: Repository<PurchasesEntity>) {}
 
   public async getOne(userId: number): Promise<UserInterface> {
     const user = await this.userRepository.findOne({
       where: {
         id: userId
       }});
-    if(!user) throw new NotFoundException("Not Found", {description: Error().stack});
+    if(!user) throw new NotFoundException(ResponseMessage.userNotFound, {description: Error().stack});
     return {user: user};
   }
 
@@ -29,13 +30,13 @@ export class UserService {
       where: {
         id: userId
       }
-    })) throw new BadRequestException(ErrorMessage.userNotFound, {description: Error().stack});
+    })) throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
     else if(await this.userRepository.exist({
       where: {
         login: updateUserDto.login,
         id: Not(userId)
       }
-    })) throw new BadRequestException(ErrorMessage.loginExists,{description: Error().stack});
+    })) throw new BadRequestException(ResponseMessage.loginExists,{description: Error().stack});
     (updateUserDto.password) ?
         await this.userRepository.update(userId, {
           login: updateUserDto.login,
@@ -44,32 +45,29 @@ export class UserService {
         await this.userRepository.update(userId, {
           login: updateUserDto.login
         });
-    return {status: "SUCCESS"};
+    return {status: ResponseMessage.success};
   }
 
   public async delete(userId: number): Promise<ResponseStatusInterface> {
-    const deleteResult = await this.userRepository.delete({
-      id: userId
-    });
-    if(deleteResult.affected == 0) throw new BadRequestException(ErrorMessage.userNotFound,{description: Error().stack});
-    return {status: "SUCCESS"};
-  }
-
-  public async updateCoins(userId: number, updateCoinsDto: UpdateCoinsDto): Promise<ResponseStatusInterface> {
-    const user = new UserEntity();
-    const coinArray: CoinEntity[] = [];
-    for(const coinId of updateCoinsDto.coins) {
-      const coin = new CoinEntity()
-      coin.id = coinId;
-      coinArray.push(coin);
-    }
-    user.id = userId
-    user.coins = coinArray
-    await this.userRepository.save(user);
-    return {status: "SUCCESS"};
+    const userPurchasesIds: number[] = (await this.purchaseRepository.
+    find({
+      relations: {
+        user: true
+      }})).
+    filter(purchase => purchase.user.id == userId).
+    map(purchase => purchase.id);
+    if(userPurchasesIds.length > 0) await this.purchaseRepository.delete(userPurchasesIds);
+    await this.userRepository.delete({id: userId});
+    return {status: ResponseMessage.success};
   }
 
   public async userCoins(userId: number): Promise<UserCoinsInterface> {
+    const userPurchases = (await this.purchaseRepository.find({
+      relations: {
+        user: true,
+        coin: true
+      }
+    })).filter(purchase => purchase.user.id == userId);
     const user = await this.userRepository.findOne({
       where: {
         id: userId
@@ -77,22 +75,17 @@ export class UserService {
       relations: {
         coins: true
       }});
-    return {
-      user: user
+    for(const coin of user.coins) {
+      const purchasesIds: number[] = userPurchases.
+      filter(purchase => purchase.coin.id == coin.id).
+      map(purchase => purchase.id);
+      coin.purchases = await this.purchaseRepository.find({
+        where:
+            {
+              id: In(purchasesIds)
+            }
+      });
     }
-  }
-
-  public async deleteUserCoins(coinId: number, userId: number): Promise<ResponseStatusInterface> {
-    const user = await this.userRepository.findOne({
-      relations: {
-        coins: true
-      },
-      where: {
-        id: userId
-      }
-    })
-    user.coins = user.coins.filter(coin => coin.id != coinId)
-    await this.userRepository.save(user);
-    return {status: "SUCCESS"};
+    return {user: user}
   }
 }
