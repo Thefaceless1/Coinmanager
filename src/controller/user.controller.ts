@@ -31,7 +31,10 @@ export class UserController {
 
   @Put("/update")
   @UsePipes(new ValidationPipe())
-  async change(@Body() updateUserDto: UpdateUserDto, @Request() req: Request ): Promise<ResponseStatusInterface> {
+  async change(
+      @Body() updateUserDto: UpdateUserDto,
+      @Request() req: Request
+  ): Promise<ResponseStatusInterface> {
     return this.UserService.update(updateUserDto,req["user"].sub);
   }
 

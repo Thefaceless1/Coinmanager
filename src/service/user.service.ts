@@ -14,7 +14,8 @@ import {PurchasesEntity} from "../../db/entity/purchases.entity";
 export class UserService {
   constructor(
       @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
-      @InjectRepository(PurchasesEntity) private readonly purchaseRepository: Repository<PurchasesEntity>) {}
+      @InjectRepository(PurchasesEntity) private readonly purchaseRepository: Repository<PurchasesEntity>
+  ) {}
 
   public async getOne(userId: number): Promise<UserInterface> {
     const user = await this.userRepository.findOne({
@@ -49,6 +50,11 @@ export class UserService {
   }
 
   public async delete(userId: number): Promise<ResponseStatusInterface> {
+    if(!await this.userRepository.exist({
+      where: {
+        id: userId
+      }
+    })) throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
     const userPurchasesIds: number[] = (await this.purchaseRepository.
     find({
       relations: {

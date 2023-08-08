@@ -1,5 +1,6 @@
 import {Injectable, InternalServerErrorException} from "@nestjs/common";
 import {MailerService} from "@nestjs-modules/mailer";
+import * as Process from "process";
 
 @Injectable()
 export class MailService {
@@ -9,7 +10,7 @@ export class MailService {
     public async sendMail(receiver: string): Promise<void> {
         try {
             await this.mailerService.sendMail({
-                from: 'coinmanager@list.ru',
+                from: Process.env.MAILER_USER,
                 to: receiver,
                 subject: 'Restore password <Coinmanager>',
                 html: '<b>Follow the link to set a new password: </b>',

@@ -49,12 +49,18 @@ export class CoinController {
 
     @Put("/update")
     @UsePipes(new ValidationPipe())
-    async addCoins(@Body() updateCoinsDto: UpdateCoinsDto, @Request() req: Request): Promise<ResponseStatusInterface> {
+    async addCoins(
+        @Body() updateCoinsDto: UpdateCoinsDto,
+        @Request() req: Request
+    ): Promise<ResponseStatusInterface> {
         return this.coinService.updateCoins(req["user"].sub, updateCoinsDto);
     }
 
     @Delete("/delete/:coinId")
-    async deleteCoins(@Request() req: Request, @Param("coinId") coinId: number): Promise<ResponseStatusInterface> {
+    async deleteCoins(
+        @Request() req: Request,
+        @Param("coinId"
+        ) coinId: number): Promise<ResponseStatusInterface> {
         return this.coinService.deleteCoins(coinId,req["user"].sub)
     }
 }

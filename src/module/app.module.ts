@@ -10,6 +10,7 @@ import {TasksModule} from "./tasks.module";
 import {AuthModule} from "./auth.module";
 import {MailerModule} from "@nestjs-modules/mailer";
 import {mailerConfig} from "../configs/mailer.config";
+import {PurchaseModule} from "./purchase.module";
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import {mailerConfig} from "../configs/mailer.config";
       TasksModule,
       UserModule,
       CoinModule,
-      AuthModule
+      AuthModule,
+      PurchaseModule
   ],
   controllers: [AppController],
   providers: [AppService],
