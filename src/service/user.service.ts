@@ -9,6 +9,8 @@ import {ResponseStatusInterface} from "../types/responseStatus.interface";
 import * as bcrypt from 'bcrypt'
 import {UserCoinsInterface} from "../types/userCoins.interface";
 import {PurchasesEntity} from "../../db/entity/purchases.entity";
+import {PurchaseStatsInterface} from "../types/purchaseStats.interface";
+import {CoinEntity} from "../../db/entity/coin.entity";
 
 @Injectable()
 export class UserService {
@@ -55,14 +57,6 @@ export class UserService {
         id: userId
       }
     })) throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
-    const userPurchasesIds: number[] = (await this.purchaseRepository.
-    find({
-      relations: {
-        user: true
-      }})).
-    filter(purchase => purchase.user.id == userId).
-    map(purchase => purchase.id);
-    if(userPurchasesIds.length > 0) await this.purchaseRepository.delete(userPurchasesIds);
     await this.userRepository.delete({id: userId});
     return {status: ResponseMessage.success};
   }
@@ -82,16 +76,28 @@ export class UserService {
         coins: true
       }});
     for(const coin of user.coins) {
-      const purchasesIds: number[] = userPurchases.
-      filter(purchase => purchase.coin.id == coin.id).
-      map(purchase => purchase.id);
+      const coinPurchases: PurchasesEntity[] = userPurchases.
+      filter(purchase => purchase.coin.id == coin.id);
+      coin.purchasesStats = (coinPurchases.length > 0) ? await this.calculatePurchaseStats(coinPurchases,coin) : null;
       coin.purchases = await this.purchaseRepository.find({
         where:
             {
-              id: In(purchasesIds)
+              id: In(coinPurchases.map(purchase => purchase.id))
             }
       });
     }
     return {user: user}
+  }
+
+  private async calculatePurchaseStats(coinPurchases: PurchasesEntity[],coin: CoinEntity): Promise<PurchaseStatsInterface> {
+    const totalCoinCount: number = coinPurchases.reduce((accum,purchase) =>accum+purchase.count,0);
+    const totalPriceCount: number = coinPurchases.reduce((accum,purchase) =>accum+purchase.totalPrice,0);
+    const averagePrice: number = totalPriceCount/totalCoinCount;
+    const profit: number = ((coin.price - averagePrice)/averagePrice)*100;
+    return {
+      averagePrice: averagePrice,
+      totalCoinCount: totalCoinCount,
+      profit: profit
+    }
   }
 }

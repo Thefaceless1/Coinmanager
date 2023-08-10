@@ -28,7 +28,7 @@ export class PurchaseService {
             where: {
                 id: userId
             }
-        })
+        });
         if(!userCoins.coins.some(coin => coin.id == addPurchaseDto.coinId)) {
             throw new BadRequestException(ResponseMessage.userDontHaveCoin, Error().stack);
         }

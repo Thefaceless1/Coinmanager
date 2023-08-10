@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Repository} from "typeorm";
+import { Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {CoinEntity} from "../../db/entity/coin.entity";
 import {GetCoinsInterface} from "../types/getCoins.interface";
@@ -18,18 +18,14 @@ export class CoinService {
     ) {}
 
     public async coins(pageNum: number, pageSize: number, symbol?: string): Promise<GetCoinsInterface> {
+        const coinsBuilder = await this.coinRepository.createQueryBuilder("coins");
         const from: number = pageNum * pageSize;
-        const to: number = from + pageSize;
-        const coins: CoinEntity[] = (symbol) ?
-            (await this.coinRepository.find()).filter(coin => coin.symbol.toLowerCase().includes(symbol.toLowerCase())) :
-            await this.coinRepository.find();
-        const foundedCoins: CoinEntity[] = coins.filter((coin,index) => {
-            return index >= from && index < to
-        });
-        const totalCount: number = coins.length;
+        if(symbol) await coinsBuilder.andWhere("lower(coins.symbol) LIKE :symbol",{symbol: `%${symbol.toLowerCase()}%`});
+        const coins = await coinsBuilder.offset(from).limit(pageSize).getMany();
+        const totalCount: number = await coinsBuilder.getCount();
         const totalPages: number = Math.floor(totalCount/pageSize) + 1;
         return {
-            coins: foundedCoins,
+            coins: coins,
             pageData: {
                 pageNum: pageNum,
                 pageSize: pageSize,
@@ -55,7 +51,7 @@ export class CoinService {
     }
 
     private async deleteRelatedPurchase(userId: number, coinIds: number[] | number): Promise<void> {
-        const purchasesIdsToDelete = (await this.purchaseRepository.
+        const purchasesIdsToDelete: number[] = (await this.purchaseRepository.
         find({
             relations: {
                 user: true,

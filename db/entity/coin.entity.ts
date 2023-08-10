@@ -1,5 +1,6 @@
 import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {PurchasesEntity} from "./purchases.entity";
+import {PurchaseStatsInterface} from "../../src/types/purchaseStats.interface";
 
 @Entity({name: "coins", orderBy: {rank: "ASC"}})
 export class CoinEntity {
@@ -34,4 +35,6 @@ export class CoinEntity {
 
     @OneToMany(() => PurchasesEntity, purchase => purchase.id, {cascade: true})
     purchases: PurchasesEntity[]
+
+    purchasesStats: PurchaseStatsInterface
 }
