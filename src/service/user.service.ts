@@ -24,7 +24,7 @@ export class UserService {
       where: {
         id: userId
       }});
-    if(!user) throw new NotFoundException(ResponseMessage.userNotFound, {description: Error().stack});
+    if(!user) throw new NotFoundException(ResponseMessage.userNotFound);
     return {user: user};
   }
 
@@ -33,13 +33,13 @@ export class UserService {
       where: {
         id: userId
       }
-    })) throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
+    })) throw new NotFoundException(ResponseMessage.userNotFound);
     else if(await this.userRepository.exist({
       where: {
         login: updateUserDto.login,
         id: Not(userId)
       }
-    })) throw new BadRequestException(ResponseMessage.loginExists,{description: Error().stack});
+    })) throw new BadRequestException(ResponseMessage.loginExists);
     (updateUserDto.password) ?
         await this.userRepository.update(userId, {
           login: updateUserDto.login,
@@ -56,7 +56,7 @@ export class UserService {
       where: {
         id: userId
       }
-    })) throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
+    })) throw new NotFoundException(ResponseMessage.userNotFound);
     await this.userRepository.delete({id: userId});
     return {status: ResponseMessage.success};
   }

@@ -11,7 +11,7 @@ import {
     UsePipes,
     ValidationPipe
 } from "@nestjs/common";
-import {ApiBearerAuth, ApiQuery, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOperation, ApiQuery, ApiTags} from "@nestjs/swagger";
 import {CoinService} from "../service/coin.service";
 import {GetCoinsInterface} from "../types/getCoins.interface";
 import {AuthGuard} from "../guards/auth.guard";
@@ -39,6 +39,7 @@ export class CoinController {
         name: "pageNum",
         example: 0,
     })
+    @ApiOperation({summary: "Get all coins data"})
     async coins(
         @Query("pageNum") pageNum: number,
         @Query("pageSize") pageSize: number,
@@ -49,6 +50,7 @@ export class CoinController {
 
     @Put("/update")
     @UsePipes(new ValidationPipe())
+    @ApiOperation({summary: "Change user's selected coins"})
     async addCoins(
         @Body() updateCoinsDto: UpdateCoinsDto,
         @Request() req: Request
@@ -57,6 +59,7 @@ export class CoinController {
     }
 
     @Delete("/delete/:coinId")
+    @ApiOperation({summary: "Delete user coin"})
     async deleteCoins(
         @Request() req: Request,
         @Param("coinId"

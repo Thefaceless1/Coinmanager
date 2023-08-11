@@ -53,7 +53,7 @@ export class AuthService {
             }
         });
         if(!user || !await bcrypt.compare(loginUserDto.password,user.password)){
-            throw new BadRequestException(ResponseMessage.userNotFound, {description: Error().stack});
+            throw new BadRequestException(ResponseMessage.userNotFound);
         }
         const payload = {
             sub: user.id,
@@ -76,7 +76,7 @@ export class AuthService {
             where:{
                 email: restorePasswordDto.email
             }});
-        if(!user) throw new BadRequestException(ResponseMessage.userNotFound, Error().stack);
+        if(!user) throw new BadRequestException(ResponseMessage.userNotFound);
         await this.mailService.sendMail(restorePasswordDto.email);
 
         return {
