@@ -1,4 +1,4 @@
-import {BadRequestException, HttpException, HttpStatus, Injectable} from "@nestjs/common";
+import {BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {UserEntity} from "../../db/entity/user.entity";
 import {Repository} from "typeorm";
@@ -53,7 +53,7 @@ export class AuthService {
             }
         });
         if(!user || !await bcrypt.compare(loginUserDto.password,user.password)){
-            throw new BadRequestException(ResponseMessage.userNotFound);
+            throw new NotFoundException(ResponseMessage.userNotFound);
         }
         const payload = {
             sub: user.id,

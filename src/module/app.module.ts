@@ -11,6 +11,7 @@ import {AuthModule} from "./auth.module";
 import {MailerModule} from "@nestjs-modules/mailer";
 import {mailerConfig} from "../configs/mailer.config";
 import {PurchaseModule} from "./purchase.module";
+import {StakingModule} from "./staking.module";
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import {PurchaseModule} from "./purchase.module";
       UserModule,
       CoinModule,
       AuthModule,
-      PurchaseModule
+      PurchaseModule,
+      StakingModule
   ],
   controllers: [AppController],
   providers: [AppService],

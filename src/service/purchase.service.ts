@@ -64,4 +64,15 @@ export class PurchaseService {
         await this.purchaseRepository.save(purchase);
         return {status: ResponseMessage.success};
     }
+
+    public async deletePurchase(purchaseId: number, userId: number): Promise<ResponseStatusInterface> {
+        const isPurchaseExists: boolean = await this.purchaseRepository.
+        createQueryBuilder("purchases").
+        where("id = :id",{id: purchaseId}).
+        andWhere("user_id = :userId", {userId: userId}).
+        getExists();
+        if(!isPurchaseExists) throw new NotFoundException(ResponseMessage.purchaseNotFound);
+        await this.purchaseRepository.delete(purchaseId);
+        return {status: ResponseMessage.success};
+    }
 }

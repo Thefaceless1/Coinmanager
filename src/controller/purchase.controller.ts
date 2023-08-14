@@ -1,4 +1,4 @@
-import {Body, Controller, Post, UseGuards, UsePipes, Request, ValidationPipe, Put, Param} from "@nestjs/common";
+import {Body, Controller, Post, UseGuards, UsePipes, Request, ValidationPipe, Put, Param, Delete} from "@nestjs/common";
 import {AddPurchaseDto} from "../dto/purchase/addPurchase.dto";
 import {AuthGuard} from "../guards/auth.guard";
 import {PurchaseService} from "../service/purchase.service";
@@ -32,5 +32,14 @@ export class PurchaseController {
         @Request() req: Request
     ): Promise<ResponseStatusInterface> {
         return this.purchaseService.updatePurchase(updatePurchaseDto, purchaseId, req["user"].sub);
+    }
+
+    @Delete("/:purchaseId/delete")
+    @ApiOperation({summary: "Delete a purchase"})
+    async deletePurchase(
+        @Param("purchaseId") purchaseId: number,
+        @Request() req: Request
+    ): Promise<ResponseStatusInterface> {
+        return this.purchaseService.deletePurchase(purchaseId, req["user"].sub);
     }
 }

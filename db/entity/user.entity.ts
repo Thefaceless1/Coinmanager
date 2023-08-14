@@ -11,6 +11,7 @@ import {
 import * as bcrypt from 'bcrypt'
 import {CoinEntity} from "./coin.entity";
 import {PurchasesEntity} from "./purchases.entity";
+import {StakingEntity} from "./staking.entity";
 
 @Entity({name: "users",orderBy: {id: "ASC"}})
 export class UserEntity {
@@ -46,6 +47,9 @@ export class UserEntity {
 
   @OneToMany(() => PurchasesEntity, purchase => purchase.id, {cascade: true})
   purchases: PurchasesEntity[]
+
+  @OneToMany(() => StakingEntity, staking => staking.id,{cascade: true})
+  staking: StakingEntity[]
 
   @BeforeInsert()
   async hashPassword() {
