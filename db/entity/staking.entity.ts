@@ -1,6 +1,7 @@
 import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {UserEntity} from "./user.entity";
 import {CoinEntity} from "./coin.entity";
+import {StakingStatsInterface} from "../../src/types/stakingStats.interface";
 
 @Entity({name: "staking"})
 export class StakingEntity {
@@ -27,4 +28,6 @@ export class StakingEntity {
     @ManyToOne(() => CoinEntity,coin => coin.id, {onDelete: "CASCADE"})
     @JoinColumn({name: "coin_id"})
     coin: CoinEntity
+
+    stakingStats: StakingStatsInterface
 }

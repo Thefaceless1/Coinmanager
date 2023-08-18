@@ -14,7 +14,6 @@ import {UpdateUserDto} from "../dto/user/updateUser.dto";
 import {ApiBearerAuth, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {UserInterface} from "../types/user.interface";
 import {AuthGuard} from "../guards/auth.guard";
-import {UserCoinsInterface} from "../types/userCoins.interface";
 import {ResponseStatusInterface} from "../types/responseStatus.interface";
 
 @Controller("api/user")
@@ -48,7 +47,13 @@ export class UserController {
 
   @Get("/coins")
   @ApiOperation({summary: "Get user's coins and purchases"})
-  async userCoins(@Request() req: Request): Promise<UserCoinsInterface> {
+  async userCoins(@Request() req: Request): Promise<UserInterface> {
     return this.UserService.userCoins(req["user"].sub);
+  }
+
+  @Get("/staking")
+  @ApiOperation({summary: "Get user's staking"})
+  async userStaking(@Request() req: Request): Promise<UserInterface> {
+    return this.UserService.userStaking(req["user"].sub);
   }
 }

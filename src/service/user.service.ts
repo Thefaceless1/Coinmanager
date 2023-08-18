@@ -7,16 +7,17 @@ import {ResponseMessage} from "../response.message";
 import {UserInterface} from "../types/user.interface";
 import {ResponseStatusInterface} from "../types/responseStatus.interface";
 import * as bcrypt from 'bcrypt'
-import {UserCoinsInterface} from "../types/userCoins.interface";
 import {PurchasesEntity} from "../../db/entity/purchases.entity";
 import {PurchaseStatsInterface} from "../types/purchaseStats.interface";
 import {CoinEntity} from "../../db/entity/coin.entity";
+import {StakingEntity} from "../../db/entity/staking.entity";
 
 @Injectable()
 export class UserService {
   constructor(
       @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
-      @InjectRepository(PurchasesEntity) private readonly purchaseRepository: Repository<PurchasesEntity>
+      @InjectRepository(PurchasesEntity) private readonly purchaseRepository: Repository<PurchasesEntity>,
+      @InjectRepository(StakingEntity) private readonly stakingRepository: Repository<StakingEntity>
   ) {}
 
   public async getOne(userId: number): Promise<UserInterface> {
@@ -61,7 +62,7 @@ export class UserService {
     return {status: ResponseMessage.success};
   }
 
-  public async userCoins(userId: number): Promise<UserCoinsInterface> {
+  public async userCoins(userId: number): Promise<UserInterface> {
     const userPurchases = (await this.purchaseRepository.find({
       relations: {
         user: true,
@@ -99,5 +100,35 @@ export class UserService {
       totalCoinCount: totalCoinCount,
       profit: profit
     }
+  }
+
+  public async userStaking(userId: number): Promise<UserInterface> {
+    const user: UserEntity = await this.userRepository.findOne({where: {id: userId}});
+    const staking: StakingEntity[] = (await this.stakingRepository.find({
+      relations:
+          {
+            coin: true,
+            user: true
+          }
+    })).filter(staking => staking.user.id == userId);
+    if(staking.length == 0) {
+      user.staking = staking
+      return {user: user};
+    }
+    staking.forEach(staking => {
+      staking.user = undefined;
+      const dayCoinProfit: number = (staking.count * staking.percent / 100) / 365;
+      const dayUsdProfit: number = dayCoinProfit * staking.coin.price;
+      const monthCoinProfit: number = (staking.count * staking.percent / 100) / 12;
+      const monthUsdProfit: number = monthCoinProfit * staking.coin.price;
+      staking.stakingStats = {
+        dayCoinProfit: dayCoinProfit,
+        dayUsdProfit: dayUsdProfit,
+        monthCoinProfit: monthCoinProfit,
+        monthUsdProfit: monthUsdProfit
+      }
+    })
+    user.staking = staking;
+    return {user: user};
   }
 }

@@ -34,53 +34,50 @@ export class AuthService {
             sub: user.id,
             username: user.login
         };
+        delete user.password;//@ts-ignore
         return {
             user: {
-                id: user.id,
-                login: user.login,
-                email: user.email,
-                createDate: user.createDate,
+                ...user,
                 token: await this.jwtService.signAsync(payload)
             }
         }
     }
 
     public async login(loginUserDto: LoginUserDto): Promise<LoginUserInterface> {
-        const user = await this.userRepository.findOne({
-            select: ["id","login","email","createDate","password"],
+        const user: UserEntity = await this.userRepository.findOne({
             where: {
                 login: loginUserDto.login
             }
         });
-        if(!user || !await bcrypt.compare(loginUserDto.password,user.password)){
-            throw new NotFoundException(ResponseMessage.userNotFound);
+        if(!user) throw new NotFoundException(ResponseMessage.userNotFound);
+        const userPassword: string = (await this.userRepository.findOne({
+            select: ['password'],
+            where: {
+                login: loginUserDto.login
+            }
+        })).password;
+        if(!await bcrypt.compare(loginUserDto.password,userPassword)) {
+            throw new BadRequestException(ResponseMessage.invalidPassword);
         }
         const payload = {
             sub: user.id,
             username: user.login
-        };
+        };//@ts-ignore
         return {
             user: {
-                id: user.id,
-                login: user.login,
-                email: user.email,
-                createDate: user.createDate,
+                ...user,
                 token: await this.jwtService.signAsync(payload)
             }
         }
     }
 
     public async restorePassword(restorePasswordDto: RestorePasswordDto): Promise<ResponseStatusInterface> {
-        const user = await this.userRepository.findOne({
-            select: ["password"],
-            where:{
+        if(!await this.userRepository.exist({
+            where: {
                 email: restorePasswordDto.email
-            }});
-        if(!user) throw new BadRequestException(ResponseMessage.userNotFound);
+            }
+        })) throw new NotFoundException(ResponseMessage.userNotFound);
         await this.mailService.sendMail(restorePasswordDto.email);
-
-        return {
-            status: "SUCCESS"
-        }
+        return {status: "SUCCESS"};
     }
 }
